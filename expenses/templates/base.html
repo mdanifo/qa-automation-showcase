@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Expenses{% endblock %} · Expenses</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="bar">
+      <a class="brand" href="/">Expenses</a>
+      {% if user %}
+      <nav aria-label="Main">
+        <a href="/"{% if active == "dashboard" %} aria-current="page"{% endif %}>My claims</a>
+        {% if user.role == "manager" %}
+        <a href="/approvals"{% if active == "approvals" %} aria-current="page"{% endif %}>Approvals</a>
+        {% endif %}
+        {% if user.role == "finance" %}
+        <a href="/payments"{% if active == "payments" %} aria-current="page"{% endif %}>Payments</a>
+        {% endif %}
+      </nav>
+      <div class="who">
+        <span data-testid="current-user">{{ user.display_name }} ({{ user.role }})</span>
+        <a href="/logout">Sign out</a>
+      </div>
+      {% endif %}
+    </div>
+  </header>
+  <main class="page">
+    {% if flash %}
+      {% if flash.kind == "error" %}
+      <div class="flash flash-error" role="alert" data-testid="flash-error">{{ flash.message }}</div>
+      {% else %}
+      <div class="flash" role="status" data-testid="flash">{{ flash.message }}</div>
+      {% endif %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,176 @@
+/* Plain styles for the expenses demo. No external fonts or CDNs. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1c2330;
+  --muted: #5b6475;
+  --border: #d9dde4;
+  --accent: #2456c7;
+  --accent-text: #ffffff;
+  --ok-bg: #e7f5ec;
+  --ok-text: #17603a;
+  --error-bg: #fdecec;
+  --error-text: #9b1c1c;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--accent); }
+
+.site-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.bar {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.brand { font-weight: 700; color: var(--text); text-decoration: none; }
+
+nav { display: flex; gap: 16px; }
+nav a { text-decoration: none; }
+nav a[aria-current="page"] { font-weight: 600; text-decoration: underline; }
+
+.who { margin-left: auto; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+
+.page { max-width: 960px; margin: 0 auto; padding: 16px; }
+
+h1 { font-size: 1.6rem; margin: 8px 0 16px; }
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.muted, .hint { color: var(--muted); }
+.hint { font-size: 0.875rem; margin: 4px 0 0; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  max-width: 520px;
+}
+
+.stack > * + * { margin-top: 14px; }
+
+.field label { display: block; font-weight: 600; margin-bottom: 4px; }
+
+input, select, textarea {
+  width: 100%;
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+button, .button {
+  display: inline-block;
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button.secondary, .button.secondary { background: var(--surface); color: var(--accent); }
+
+button:focus-visible, .button:focus-visible, a:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid #8fb0f5;
+  outline-offset: 2px;
+}
+
+.actions { display: flex; align-items: center; gap: 16px; }
+
+.flash, .alert {
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}
+.flash { background: var(--ok-bg); color: var(--ok-text); }
+.flash-error, .alert { background: var(--error-bg); color: var(--error-text); }
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.total {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+.total dt { color: var(--muted); font-size: 0.875rem; }
+.total dd { margin: 4px 0 0; font-size: 1.25rem; font-weight: 700; }
+
+.table-wrap {
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+thead th { font-size: 0.875rem; color: var(--muted); }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; white-space: nowrap; }
+
+.status {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  background: #eef0f4;
+}
+.status-approved { background: #e6eefc; }
+.status-paid { background: var(--ok-bg); color: var(--ok-text); }
+.status-rejected { background: var(--error-bg); color: var(--error-text); }
+
+.decision { min-width: 220px; }
+.decision form + form { margin-top: 8px; }
+.reject label { font-size: 0.875rem; font-weight: 600; }
+.reject textarea { margin: 2px 0 6px; }
+
+.empty { color: var(--muted); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .totals { grid-template-columns: 1fr; }
+  .who { margin-left: 0; }
+}

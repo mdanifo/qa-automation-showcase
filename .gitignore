@@ -1,0 +1,15 @@
+# Local environment and packaging
+.venv/
+*.egg-info/
+build/
+dist/
+
+# Caches
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# Run output: JUnit XML, HTML report, server logs and the seeded-bug table
+reports/
+# Playwright traces, screenshots and video
+test-results/

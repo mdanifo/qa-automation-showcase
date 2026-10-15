@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}New claim{% endblock %}
+{% block content %}
+<h1>New claim</h1>
+{% if error %}
+<div class="alert" role="alert" data-testid="form-error">{{ error }}</div>
+{% endif %}
+{% set mileage = values.category == "mileage" %}
+<form method="post" action="/claims/new" class="card stack" novalidate>
+  <div class="field">
+    <label for="title">Title</label>
+    <input id="title" name="title" value="{{ values.title or '' }}" autocomplete="off" required>
+  </div>
+  <div class="field">
+    <label for="category">Category</label>
+    <select id="category" name="category" aria-describedby="category-hint">
+      {% for name in categories %}
+      <option value="{{ name }}"{% if values.category == name %} selected{% endif %}>{{ name|label }}</option>
+      {% endfor %}
+    </select>
+    <p class="hint" id="category-hint">Limit per claim:
+      {% for name in categories %}{{ name|label }} ${{ category_limits[name] }}{% if not loop.last %} · {% endif %}{% endfor %}
+    </p>
+  </div>
+  <div class="field" id="amount-field"{% if mileage %} hidden{% endif %}>
+    <label for="amount">Amount</label>
+    <input id="amount" name="amount" value="{{ values.amount or '' }}" inputmode="decimal" placeholder="42.50" autocomplete="off"{% if mileage %} disabled{% endif %}>
+  </div>
+  <div class="field" id="miles-field"{% if not mileage %} hidden{% endif %}>
+    <label for="miles">Miles</label>
+    <input id="miles" name="miles" value="{{ values.miles or '' }}" inputmode="decimal" placeholder="13.5" autocomplete="off" aria-describedby="miles-hint"{% if not mileage %} disabled{% endif %}>
+    <p class="hint" id="miles-hint">Paid at ${{ mileage_rate }} per mile, up to 1000 miles.</p>
+  </div>
+  <div class="field">
+    <label for="expense_date">Expense date</label>
+    <input id="expense_date" name="expense_date" type="date" value="{{ values.expense_date or '' }}" max="{{ today }}" required>
+  </div>
+  <div class="actions">
+    <button type="submit">Submit claim</button>
+    <a href="/">Cancel</a>
+  </div>
+</form>
+{% endblock %}

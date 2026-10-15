@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claim totals",
+  "description": "GET /api/summary: totals of the caller's own claims. Rejected claims count nowhere.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pending", "approved", "paid"],
+  "properties": {
+    "pending": { "$ref": "common.schema.json#/$defs/money" },
+    "approved": { "$ref": "common.schema.json#/$defs/money" },
+    "paid": { "$ref": "common.schema.json#/$defs/money" }
+  }
+}

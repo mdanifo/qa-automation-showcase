@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Payments{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Payments</h1>
+  <a class="button secondary" href="/api/export.csv" download>Download CSV</a>
+</div>
+<p class="muted">Approved claims waiting to be paid. The CSV holds every approved and paid claim.</p>
+<div class="table-wrap">
+  <table data-testid="payments-table">
+    <caption class="visually-hidden">Approved claims waiting for payment, oldest first</caption>
+    <thead>
+      <tr>
+        <th scope="col">Owner</th>
+        <th scope="col">Title</th>
+        <th scope="col">Category</th>
+        <th scope="col" class="num">Amount</th>
+        <th scope="col">Date</th>
+        <th scope="col">Payment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in claims %}
+      <tr data-testid="payment-row-{{ c.id }}">
+        <td data-testid="claim-owner">{{ c.owner_name }}</td>
+        <td data-testid="claim-title">{{ c.title }}</td>
+        <td data-testid="claim-category">{{ c.category|label }}</td>
+        <td data-testid="claim-amount" class="num">{{ c.amount_cents|money }}</td>
+        <td data-testid="claim-date">{{ c.expense_date }}</td>
+        <td>
+          <form method="post" action="/claims/{{ c.id }}/pay">
+            <button type="submit">Pay</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if not claims %}
+<p class="empty">Nothing is waiting for payment.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Health",
+  "description": "GET /health: liveness, and the seeded bug this process runs, if any.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "seededBug"],
+  "properties": {
+    "status": { "const": "ok" },
+    "seededBug": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z]+(-[a-z]+)*$"
+    }
+  }
+}

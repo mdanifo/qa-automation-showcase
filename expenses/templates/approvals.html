@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<h1>Approvals</h1>
+<p class="muted">Submitted claims from other people. You cannot decide your own.</p>
+<div class="table-wrap">
+  <table data-testid="approvals-table">
+    <caption class="visually-hidden">Claims waiting for a decision, oldest first</caption>
+    <thead>
+      <tr>
+        <th scope="col">Owner</th>
+        <th scope="col">Title</th>
+        <th scope="col">Category</th>
+        <th scope="col" class="num">Amount</th>
+        <th scope="col">Date</th>
+        <th scope="col">Decision</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in claims %}
+      <tr data-testid="approval-row-{{ c.id }}">
+        <td data-testid="claim-owner">{{ c.owner_name }}</td>
+        <td data-testid="claim-title">{{ c.title }}</td>
+        <td data-testid="claim-category">{{ c.category|label }}</td>
+        <td data-testid="claim-amount" class="num">{{ c.amount_cents|money }}</td>
+        <td data-testid="claim-date">{{ c.expense_date }}</td>
+        <td class="decision">
+          <form method="post" action="/claims/{{ c.id }}/approve">
+            <button type="submit">Approve</button>
+          </form>
+          <form method="post" action="/claims/{{ c.id }}/reject" class="reject">
+            <label for="reason-{{ c.id }}">Reason</label>
+            <textarea id="reason-{{ c.id }}" name="note" rows="2"></textarea>
+            <button type="submit" class="secondary">Reject</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if not claims %}
+<p class="empty">Nothing is waiting for approval.</p>
+{% endif %}
+{% endblock %}

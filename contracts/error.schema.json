@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Error",
+  "description": "Every error response, including the framework's own 404, 405 and 422.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["error", "detail"],
+  "properties": {
+    "error": {
+      "enum": [
+        "bad_request",
+        "unauthenticated",
+        "forbidden",
+        "not_found",
+        "method_not_allowed",
+        "invalid_transition",
+        "validation",
+        "internal"
+      ]
+    },
+    "detail": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Claim",
+  "description": "One expense claim, as POST /api/claims, GET /api/claims/{id}, approve, reject and pay return it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "owner",
+    "title",
+    "category",
+    "amount",
+    "miles",
+    "expenseDate",
+    "status",
+    "submittedAt",
+    "decidedBy",
+    "decidedAt",
+    "decisionNote",
+    "paidBy",
+    "paidAt"
+  ],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "owner": { "$ref": "common.schema.json#/$defs/username" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "category": { "enum": ["meals", "lodging", "travel", "software", "other", "mileage"] },
+    "amount": { "$ref": "common.schema.json#/$defs/money" },
+    "miles": {
+      "description": "Miles with exactly one decimal, for mileage claims only.",
+      "type": ["string", "null"],
+      "pattern": "^\\d+\\.\\d$"
+    },
+    "expenseDate": { "$ref": "common.schema.json#/$defs/isoDate" },
+    "status": { "enum": ["submitted", "approved", "rejected", "paid"] },
+    "submittedAt": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "decidedBy": {
+      "description": "Null until a manager decides, and again if that manager's account is removed.",
+      "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/username" }]
+    },
+    "decidedAt": {
+      "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/timestamp" }]
+    },
+    "decisionNote": {
+      "description": "The rejection reason. Only a rejected claim has one.",
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "paidBy": {
+      "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/username" }]
+    },
+    "paidAt": {
+      "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/timestamp" }]
+    }
+  },
+  "allOf": [
+    {
+      "description": "A mileage claim carries miles; every other category carries null.",
+      "if": { "required": ["category"], "properties": { "category": { "const": "mileage" } } },
+      "then": { "properties": { "miles": { "type": "string" } } },
+      "else": { "properties": { "miles": { "type": "null" } } }
+    },
+    {
+      "description": "A submitted claim has no decision and no payment.",
+      "if": { "required": ["status"], "properties": { "status": { "const": "submitted" } } },
+      "then": {
+        "properties": {
+          "decidedBy": { "type": "null" },
+          "decidedAt": { "type": "null" },
+          "decisionNote": { "type": "null" },
+          "paidBy": { "type": "null" },
+          "paidAt": { "type": "null" }
+        }
+      }
+    },
+    {
+      "description": "An approved claim has a decision time, no note and no payment.",
+      "if": { "required": ["status"], "properties": { "status": { "const": "approved" } } },
+      "then": {
+        "properties": {
+          "decidedAt": { "type": "string" },
+          "decisionNote": { "type": "null" },
+          "paidBy": { "type": "null" },
+          "paidAt": { "type": "null" }
+        }
+      }
+    },
+    {
+      "description": "A rejected claim has a decision time and a reason, and no payment.",
+      "if": { "required": ["status"], "properties": { "status": { "const": "rejected" } } },
+      "then": {
+        "properties": {
+          "decidedAt": { "type": "string" },
+          "decisionNote": { "type": "string" },
+          "paidBy": { "type": "null" },
+          "paidAt": { "type": "null" }
+        }
+      }
+    },
+    {
+      "description": "A paid claim was approved first, so it has a decision time and a payment time.",
+      "if": { "required": ["status"], "properties": { "status": { "const": "paid" } } },
+      "then": {
+        "properties": {
+          "decidedAt": { "type": "string" },
+          "decisionNote": { "type": "null" },
+          "paidAt": { "type": "string" }
+        }
+      }
+    }
+  ]
+}

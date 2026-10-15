@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}My claims{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>My claims</h1>
+  <a class="button" href="/claims/new">New claim</a>
+</div>
+
+<dl class="totals">
+  <div class="total">
+    <dt>Pending</dt>
+    <dd data-testid="total-pending">{{ totals.pending|money }}</dd>
+  </div>
+  <div class="total">
+    <dt>Approved</dt>
+    <dd data-testid="total-approved">{{ totals.approved|money }}</dd>
+  </div>
+  <div class="total">
+    <dt>Paid</dt>
+    <dd data-testid="total-paid">{{ totals.paid|money }}</dd>
+  </div>
+</dl>
+
+<div class="table-wrap">
+  <table data-testid="claims-table">
+    <caption class="visually-hidden">Claims you have submitted, newest first</caption>
+    <thead>
+      <tr>
+        <th scope="col">Title</th>
+        <th scope="col">Category</th>
+        <th scope="col" class="num">Amount</th>
+        <th scope="col">Date</th>
+        <th scope="col">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in claims %}
+      <tr data-testid="claim-row-{{ c.id }}">
+        {# SEEDED BUG unescaped-title: |safe trusts the title and renders it as HTML. #}
+        <td data-testid="claim-title">{% if bug_active("unescaped-title") %}{{ c.title|safe }}{% else %}{{ c.title }}{% endif %}</td>
+        <td data-testid="claim-category">{{ c.category|label }}</td>
+        <td data-testid="claim-amount" class="num">{{ c.amount_cents|money }}</td>
+        <td data-testid="claim-date">{{ c.expense_date }}</td>
+        <td data-testid="claim-status"><span class="status status-{{ c.status }}">{{ c.status|label }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if not claims %}
+<p class="empty">No claims yet.</p>
+{% endif %}
+{% endblock %}
