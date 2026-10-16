@@ -1,6 +1,6 @@
 """Requests the routes cannot serve: unknown paths, wrong methods, and ids that cannot exist.
 
-Each one gets the documented error shape with the right status, never a 500.
+Each one answers with the documented error shape and the right status, not a 500.
 """
 
 from __future__ import annotations

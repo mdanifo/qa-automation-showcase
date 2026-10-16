@@ -3,12 +3,9 @@
 Employees see only their own claims. Opening anyone else's is a 404 with the
 same body as a claim that does not exist. Managers list their own claims plus
 everyone's submitted ones; finance lists approved and paid. Managers and
-finance may open any claim by id.
-
-One trade-off, pinned in test_error_precedence.py: approve, reject and pay
-check the caller's role before anything else, so an employee who tries one
-gets 403 for any claim that exists and 404 for one that does not. That tells
-them an id is in use, never what the claim holds.
+finance may open any claim by id. (Approve, reject and pay check the role
+first, so an employee gets 403 there for any claim that exists; see
+test_error_precedence.py.)
 
 The database is shared with other tests, so list assertions look only at the
 claims this test created (``& created``), except where a rule holds for every row.

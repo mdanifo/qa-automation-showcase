@@ -1,29 +1,28 @@
 """Run the suite once per seeded bug and require every test marked for that bug to fail.
 
-The app carries twelve deliberate bugs, each behind ``SEEDED_BUG=<name>``
-(see expenses/bugs.py), and a test written to catch one says so with
+The app carries sixteen seeded bugs, each behind ``SEEDED_BUG=<name>`` (see
+expenses/bugs.py), and a test written to catch one is marked
 ``@pytest.mark.catches("<name>")``. The script:
 
 1. collects the ``{bug: [node id, ...]}`` map with
-   ``pytest --collect-only --write-catches=PATH`` and stops if any bug in the
+   ``pytest --collect-only --write-catches=PATH`` and stops if a bug in the
    catalog has no marked test;
 2. runs the suite with no bug, where every test must pass (``--skip-clean``
-   leaves this out, for CI, which has just run the clean suite);
+   leaves this out; CI has just run the clean suite);
 3. runs the suite once per bug with ``SEEDED_BUG=<bug>`` and requires every
-   marked test to fail, recording any other failures as collateral;
+   marked test to fail, recording any other failure as collateral;
 4. prints a Markdown table, writes it to reports/seeded-bugs.md, appends it to
    ``$GITHUB_STEP_SUMMARY`` when that is set, and exits 1 if any bug escaped;
-5. after a full run (the clean run and all twelve bugs, every one caught),
-   writes the table into README.md between its ``seeded-bugs`` markers and
-   runs tests/test_readme.py to check the README against the suite.
+5. after a full run with every bug caught, writes the table into README.md
+   between its ``seeded-bugs`` markers and runs tests/test_readme.py.
 
 tests/test_readme.py checks this script's output, so the runs above leave it
-out and it runs only at the end, once the README is written.
+out and it runs last, once the README is written.
 
 Only a failure counts as a catch. A marked test that errored (a fixture broke,
 the server never started) is reported as not caught.
 
-    python scripts/prove_tests_fail.py                      # clean run, then all twelve bugs
+    python scripts/prove_tests_fail.py                      # clean run, then every bug
     python scripts/prove_tests_fail.py --skip-clean         # the bugs only
     python scripts/prove_tests_fail.py self-approval future-date
 """
@@ -57,9 +56,9 @@ README_TESTS = "tests/test_readme.py"  # checks the README this script writes; r
 
 LAYERS = ("unit", "api", "contract", "db", "export", "ui")
 
-# pytest exit codes: 0 means every test passed, 1 means some failed. Any other
-# code means the run itself broke (interrupted, internal error, usage error,
-# nothing collected), and then its results prove nothing either way.
+# pytest exits 0 when every test passed and 1 when some failed. Anything else
+# means the run itself broke (usage error, interrupted, nothing collected) and
+# its results prove nothing.
 EXIT_ALL_PASSED = 0
 EXIT_TESTS_FAILED = 1
 

@@ -31,6 +31,22 @@ def test_a_cookie_naming_an_unknown_user_redirects_to_sign_in(page, context, bas
     expect(page).to_have_url(f"{base_url}/login")
 
 
+@pytest.mark.catches("login-trusts-the-form")
+def test_a_name_that_is_not_a_user_cannot_sign_in_even_from_a_tampered_form(
+    login_page, page, base_url
+):
+    """The list offers real users only, but a form can post anything. The server decides."""
+    login_page.open().offer("nobody-00000000")
+    login_page.user_select.select_option("nobody-00000000")
+
+    login_page.sign_in_button.click()
+
+    expect(page).to_have_url(f"{base_url}/login")
+    expect(login_page.error).to_have_text("Pick a user from the list.")
+    page.goto("/")
+    expect(page).to_have_url(f"{base_url}/login")
+
+
 def test_signing_out_returns_to_sign_in_and_stays_signed_out(
     sign_in, dashboard, employee, base_url
 ):

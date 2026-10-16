@@ -13,3 +13,11 @@ __pycache__/
 reports/
 # Playwright traces, screenshots and video
 test-results/
+
+# Never commit credentials or local secrets
+.env
+.env.*
+token-*.json
+credentials*.json
+*.pem
+.coverage

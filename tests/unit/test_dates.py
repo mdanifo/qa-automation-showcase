@@ -16,10 +16,10 @@ HAWAII = timezone(timedelta(hours=-10), "HST")
 class FrozenClock:
     """Stands in for ``datetime`` inside rules, so "now" is one fixed instant.
 
-    Asked for local time (``now()`` with no zone), it answers for UTC-10, the
-    way the real ``datetime.now()`` answers for the machine's own zone. A
-    fixed zone keeps the test meaningful on a machine set to UTC, as CI
-    runners are: there, local and UTC dates agree and a local-time bug hides.
+    Asked for local time (``now()`` with no zone) it answers for UTC-10, as
+    the real ``datetime.now()`` answers for the machine's zone. CI runners
+    sit at UTC, where local and UTC dates agree and a local-time bug would
+    hide; the fixed zone keeps the test meaningful there.
     """
 
     def __init__(self, instant: datetime, local_zone: timezone = HAWAII) -> None:

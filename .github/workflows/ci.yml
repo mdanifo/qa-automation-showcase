@@ -82,7 +82,7 @@ jobs:
   prove-tests-fail:
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     services:
       db:
         image: postgres:16

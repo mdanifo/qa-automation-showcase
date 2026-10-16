@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 from datetime import timedelta
 
-from expenses import db, rules, service
+from expenses import bugs, db, rules, service
 
 
 def _user(username: str) -> service.User:
@@ -36,7 +36,11 @@ def add_demo_claims() -> int:
             "SELECT count(*) AS n FROM claims WHERE owner = ANY(%s)",
             ([u.username for u in (erin, eli, maya, omar, fran)],),
         ).fetchone()
-    if existing and existing["n"]:
+    already_seeded = bool(existing and existing["n"])
+    if bugs.active("demo-seed-repeats"):
+        # SEEDED BUG demo-seed-repeats: the guard is skipped and every run adds the claims again.
+        already_seeded = False
+    if already_seeded:
         return 0
 
     _claim(erin, "Team lunch", "meals", "42.50", 3)

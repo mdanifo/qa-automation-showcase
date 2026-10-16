@@ -2,15 +2,13 @@
 
 Approve, reject and pay read the claim with ``SELECT ... FOR UPDATE``, so a
 second request waits for the first to commit and then sees the new status.
-Without that lock both requests read "approved", both pay, and the claim is
-paid twice.
+Without the lock both requests read "approved" and both pay.
 
 The test holds the claim's row lock on a connection of its own, sends the
-requests one at a time, and waits until Postgres reports each one blocked
-behind that lock before sending the next. Then it lets go. Postgres hands the
-row to waiters in the order they queued, so the first request always goes
-first. Correct code queues the requests on the read; code without the lock
-reads freely, queues them on the write, and the second write succeeds as well.
+requests one at a time, waits until Postgres reports each one blocked behind
+that lock, then lets go. Postgres wakes waiters in queue order, so the first
+request goes first. Code without the lock still blocks, on the UPDATE rather
+than the read, and then both writes go through; the status codes show it.
 """
 
 from __future__ import annotations

@@ -7,21 +7,19 @@ against one database. Whatever a test creates is deleted afterwards by
 
 Three ways to get a claim:
 
-* ``submit_claim(api, ...)`` goes through the API, the way a user would. Use it
-  when submitting is part of what the test checks, or is harmless setup.
+* ``submit_claim(api, ...)`` goes through the API, the way a user would.
 * ``insert_claim(db, owner, status=...)`` writes the row straight to the
-  database in the state the test needs. A test of *pay* should not depend on
-  *approve* working: when approve breaks, only the approve tests should fail.
-  It writes no ``claim_events`` rows unless ``with_events=True``, and it does
-  not apply business rules, so it can also build rows the API would refuse.
+  database in the state the test needs, with no business rule applied, so it
+  can also build rows the API would refuse. A test of pay then does not
+  depend on approve working. It writes no ``claim_events`` rows unless
+  ``with_events=True``.
 * ``insert_claim_with_history(db, make_user, owner, status)`` is
-  ``insert_claim`` with the rest of a real claim's past: a fresh manager
-  decided it, a fresh finance user paid it, and its claim_events are written.
-  Use it when a test reads the whole row or the audit trail.
+  ``insert_claim`` plus a real claim's past: a fresh manager decided it, a
+  fresh finance user paid it, and its claim_events are written. For tests
+  that read the whole row or the audit trail.
 
-Expected values here (such as the mileage amount in ``insert_claim``) are
-computed in this module, independently of ``expenses.rules``, so a bug in the
-app cannot leak into the test's idea of the right answer.
+Expected values here (the mileage amount in ``insert_claim``, for one) are
+computed in this module, independently of ``expenses.rules``.
 """
 
 from __future__ import annotations

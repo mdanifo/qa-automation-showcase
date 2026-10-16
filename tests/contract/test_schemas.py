@@ -1,9 +1,8 @@
 """The contracts themselves: valid schemas that accept the documented shape and refuse near misses.
 
-A schema that accepts everything would let every contract test pass. These
-tests need no server. They show each schema refuses the mistakes it exists to
-catch, and that it refuses them for the right reason: each near miss breaks
-exactly one named check.
+A schema that accepts everything would pass every contract test, so each one
+is checked here, with no server, against near misses: every near miss must
+break exactly one named check.
 """
 
 from __future__ import annotations

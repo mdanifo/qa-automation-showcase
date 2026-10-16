@@ -1,16 +1,14 @@
 """The FastAPI app: JSON API routes, server-rendered pages and error handlers.
 
-Run it with ``python -m uvicorn expenses.main:app --port 8000``.
-
-Sign-in is deliberately fake (an ``X-User`` header or a ``user`` cookie naming a
-user). The app exists to be tested, not deployed.
+Run it with ``python -m uvicorn expenses.main:app --port 8000``. Sign-in is an
+``X-User`` header or a ``user`` cookie naming a user; there are no passwords.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from decimal import Decimal
 from pathlib import Path
@@ -272,8 +270,13 @@ def login_page(request: Request) -> HTMLResponse:
 @app.post("/login", response_model=None)
 def login(request: Request, fields: FormFields) -> Response:
     """Set the user cookie and go to the dashboard."""
-    user = service.get_user(fields.get("user"))
-    if user is None:
+    posted = fields.get("user", "")
+    user = service.get_user(posted)
+    username = user.username if user else None
+    if bugs.active("login-trusts-the-form"):
+        # SEEDED BUG login-trusts-the-form: the posted name goes into the cookie without the lookup.
+        username = posted
+    if username is None:
         return _render(
             request,
             "login.html",
@@ -283,7 +286,7 @@ def login(request: Request, fields: FormFields) -> Response:
             active="login",
         )
     response = RedirectResponse("/", status_code=303)
-    response.set_cookie(USER_COOKIE, user.username, httponly=True, samesite="lax")
+    response.set_cookie(USER_COOKIE, username, httponly=True, samesite="lax")
     return response
 
 
@@ -381,37 +384,50 @@ def payments_page(request: Request) -> Response:
     return _role_page(request, "finance", "payments.html", "payments")
 
 
-@app.post("/claims/{claim_id}/approve", response_model=None)
-def approve_form(request: Request, claim_id: int) -> Response:
+def _page_action(
+    request: Request, page: str, act: Callable[[service.User], object], done: str
+) -> Response:
+    """Run a button press (Approve, Reject, Pay) and go back to ``page`` with the outcome."""
     user = _page_user(request)
     if user is None:
         return _to_login()
     try:
-        service.approve(user, claim_id)
+        act(user)
     except rules.ClaimError as exc:
-        return _redirect("/approvals", exc.detail, kind="error")
-    return _redirect("/approvals", f"Claim #{claim_id} approved.")
+        message, kind = exc.detail, "error"
+    else:
+        message, kind = done, "ok"
+    if bugs.active("page-ignores-refusal"):
+        # SEEDED BUG page-ignores-refusal: the page reports success whatever the service said.
+        message, kind = done, "ok"
+    return _redirect(page, message, kind)
+
+
+@app.post("/claims/{claim_id}/approve", response_model=None)
+def approve_form(request: Request, claim_id: int) -> Response:
+    return _page_action(
+        request,
+        "/approvals",
+        lambda user: service.approve(user, claim_id),
+        f"Claim #{claim_id} approved.",
+    )
 
 
 @app.post("/claims/{claim_id}/reject", response_model=None)
 def reject_form(request: Request, claim_id: int, fields: FormFields) -> Response:
-    user = _page_user(request)
-    if user is None:
-        return _to_login()
-    try:
-        service.reject(user, claim_id, fields.get("note"))
-    except rules.ClaimError as exc:
-        return _redirect("/approvals", exc.detail, kind="error")
-    return _redirect("/approvals", f"Claim #{claim_id} rejected.")
+    return _page_action(
+        request,
+        "/approvals",
+        lambda user: service.reject(user, claim_id, fields.get("note")),
+        f"Claim #{claim_id} rejected.",
+    )
 
 
 @app.post("/claims/{claim_id}/pay", response_model=None)
 def pay_form(request: Request, claim_id: int) -> Response:
-    user = _page_user(request)
-    if user is None:
-        return _to_login()
-    try:
-        service.pay(user, claim_id)
-    except rules.ClaimError as exc:
-        return _redirect("/payments", exc.detail, kind="error")
-    return _redirect("/payments", f"Claim #{claim_id} paid.")
+    return _page_action(
+        request,
+        "/payments",
+        lambda user: service.pay(user, claim_id),
+        f"Claim #{claim_id} paid.",
+    )

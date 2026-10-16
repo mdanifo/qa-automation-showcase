@@ -1,9 +1,8 @@
 """Managers decide on other people's submitted claims from /approvals.
 
-The page lists every submitted claim in the database, including other
-tests' claims, so each test finds its rows by claim id. A test that checks a
-claim is absent first checks one of its own claims is present, so an empty
-or broken page cannot pass for a correct one.
+The page lists every submitted claim in the database, other tests' included,
+so each test finds its rows by claim id, and a test that checks a claim is
+absent first checks one of its own is present.
 
 No page shows a rejection's reason, so the one test that checks the typed
 reason was stored reads it back from the database.
@@ -14,7 +13,7 @@ from __future__ import annotations
 import pytest
 from playwright.sync_api import expect
 
-from tests.support import claim_row, days_ago, insert_claim
+from tests.support import claim_row, days_ago, expect_ok, insert_claim
 
 
 def test_a_waiting_claim_shows_whose_it_is_and_what_it_is_for(
@@ -108,7 +107,7 @@ def test_the_owner_sees_a_claim_rejected_from_the_page_as_rejected(
     expect(dashboard.claim(claim["id"]).status).to_have_text("Rejected")
 
 
-@pytest.mark.catches("reject-without-note")
+@pytest.mark.catches("reject-without-note", "page-ignores-refusal")
 @pytest.mark.parametrize("reason", [pytest.param("", id="empty"), pytest.param("   ", id="spaces")])
 def test_rejecting_without_a_reason_is_refused_and_the_claim_stays(
     reason, db, sign_in, approvals, employee, manager
@@ -145,3 +144,25 @@ def test_a_claim_that_was_already_decided_is_not_listed(
 
     expect(approvals.claim(waiting["id"]).root).to_be_visible()
     expect(approvals.claim(decided["id"]).root).to_have_count(0)
+
+
+@pytest.mark.catches("page-ignores-refusal")
+def test_approving_from_a_stale_page_shows_why_and_keeps_the_first_decision(
+    db, api_as, make_user, sign_in, approvals, employee, manager
+):
+    """Another manager rejects the claim while this page is open; the stale Approve must say so."""
+    claim = insert_claim(db, employee)
+    sign_in(manager)
+    row = approvals.open().claim(claim["id"])
+    expect(row.root).to_be_visible()
+    other = make_user("manager")
+    expect_ok(api_as(other).reject(claim["id"], note="Duplicate of an earlier claim."))
+
+    row.approve()
+
+    expect(approvals.flash_error).to_have_text(
+        "Only a submitted claim can be approved. This one is rejected."
+    )
+    expect(approvals.claim(claim["id"]).root).to_have_count(0)
+    stored = claim_row(db, claim["id"])
+    assert (stored["status"], stored["decided_by"]) == ("rejected", other.username)

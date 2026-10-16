@@ -65,6 +65,25 @@ def test_a_reason_of_501_characters_is_refused(db, api_as, employee, manager):
     assert error_of(resp) == (422, "validation")
 
 
+@pytest.mark.catches("control-chars-accepted")
+def test_a_reason_with_a_nul_byte_is_refused(db, api_as, employee, manager):
+    claim = insert_claim(db, employee, "submitted")
+
+    resp = api_as(manager).reject(claim["id"], note="No\x00receipt.")
+
+    assert error_of(resp) == (422, "validation")
+    assert api_as(manager).get_claim(claim["id"]).json()["status"] == "submitted"
+
+
+def test_a_reason_keeps_its_line_breaks(db, api_as, employee, manager):
+    claim = insert_claim(db, employee, "submitted")
+    reason = "Receipt is for two people.\nOnly one was on the trip."
+
+    resp = api_as(manager).reject(claim["id"], note=reason)
+
+    assert (resp.status_code, resp.json()["decisionNote"]) == (200, reason)
+
+
 def test_a_reason_sent_as_a_json_array_is_refused(db, api_as, employee, manager):
     claim = insert_claim(db, employee, "submitted")
 

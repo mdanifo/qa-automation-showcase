@@ -114,8 +114,8 @@ def _bad_catches_message(problems: list[str]) -> str:
 def pytest_pycollect_makeitem(collector: pytest.Module | pytest.Class) -> Any:
     """Turn an unknown bug name in a catches marker into a collection error for its module.
 
-    A collection error stops the run (serially and under xdist) before any
-    test executes, so a typo can never count as a bug that was caught.
+    A collection error stops the run, serially and under xdist, before any
+    test executes.
     """
     result = yield
     made = result if isinstance(result, list) else [result]
@@ -159,7 +159,7 @@ def pytest_collection_finish(session: pytest.Session) -> None:
     """Write the --write-catches map from the final (selected) items.
 
     Nothing is written when collection had errors, and a map left by an
-    earlier run is removed, so a broken collection cannot pass for a clean one.
+    earlier run is removed first.
     """
     target = session.config.getoption("--write-catches")
     if not target:
@@ -349,9 +349,8 @@ def finance(make_user: UserFactory) -> User:
 def claim_in(db: Db, make_user: UserFactory, employee: User) -> Callable[..., dict[str, Any]]:
     """``claim_in(status, owner=employee)``: a claim written straight into ``status``.
 
-    Built in SQL, so a test of pay does not depend on approve working, and
-    filled in the way the app would have left it (see
-    ``builders.insert_claim_with_history``).
+    Written in SQL rather than through approve and pay, and filled in the way
+    the app would have left it (see ``builders.insert_claim_with_history``).
     """
 
     def build(status: str, owner: User | None = None) -> dict[str, Any]:

@@ -111,6 +111,18 @@ def test_a_title_that_is_blank_or_over_80_characters_is_refused(title, api_as, e
     assert error_of(resp) == (422, "validation")
 
 
+@pytest.mark.catches("control-chars-accepted")
+@pytest.mark.parametrize(
+    "title",
+    [pytest.param("Team\x00lunch", id="nul-byte"), pytest.param("Team\x07lunch", id="bell")],
+)
+def test_a_title_with_a_control_character_is_refused(title, api_as, employee):
+    """Postgres cannot store a NUL, so without this rule the request would end in a 500."""
+    resp = api_as(employee).create_claim(claim_body(title=title))
+
+    assert error_of(resp) == (422, "validation")
+
+
 @pytest.mark.parametrize(
     "overrides",
     [

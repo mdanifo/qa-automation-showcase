@@ -1,9 +1,9 @@
 """Finance pays approved claims from /payments and downloads the export from its CSV link.
 
-The page lists every approved claim in the database, including other tests'
-claims, so each test finds its rows by claim id. The export's format is
-tested in tests/export; here the point is that the link hands the browser the
-export for the signed-in finance user.
+The page lists every approved claim in the database, other tests' included,
+so each test finds its rows by claim id. The export's format is tested in
+tests/export; here the check is that the link hands the browser the export
+for the signed-in finance user.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 from playwright.sync_api import expect
 
-from tests.support import days_ago, insert_claim
+from tests.support import claim_row, days_ago, expect_ok, insert_claim
 from tests.ui.pages import csv_rows_by_id
 
 
@@ -38,6 +38,27 @@ def test_paying_a_claim_confirms_it_and_takes_it_off_the_list(
 
     expect(payments.flash).to_have_text(f"Claim #{claim['id']} paid.")
     expect(payments.claim(claim["id"]).root).to_have_count(0)
+
+
+@pytest.mark.catches("page-ignores-refusal")
+def test_paying_from_a_stale_page_shows_why_and_keeps_the_first_payment(
+    db, api_as, make_user, sign_in, payments, employee, finance
+):
+    """Someone else pays the claim while this page sits open, and the stale Pay must say so."""
+    claim = insert_claim(db, employee, "approved")
+    sign_in(finance)
+    row = payments.open().claim(claim["id"])
+    expect(row.root).to_be_visible()
+    other = make_user("finance")
+    expect_ok(api_as(other).pay(claim["id"]))
+
+    row.pay()
+
+    expect(payments.flash_error).to_have_text(
+        "Only an approved claim can be paid. This one is paid."
+    )
+    expect(payments.claim(claim["id"]).root).to_have_count(0)
+    assert claim_row(db, claim["id"])["paid_by"] == other.username
 
 
 def test_the_owner_sees_a_claim_paid_from_the_page_as_paid(

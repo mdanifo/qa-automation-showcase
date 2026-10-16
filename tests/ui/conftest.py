@@ -1,11 +1,10 @@
 """Fixtures for the browser tests.
 
 Data is set up through the builders (``insert_claim``, ``submit_claim``) and
-checked through the browser. Two places sign in through the form: the login
-tests in test_sign_in.py, and ``page_for``, which test_journey.py uses
-because an end-to-end run should start where a person does. Every other test
-uses ``sign_in``, which sets the same ``user`` cookie the form sets, so a
-broken login page fails those two files and nothing else.
+checked through the browser. Only the login tests in test_sign_in.py and
+``page_for`` (used by test_journey.py, which should start where a person
+does) go through the login form. Every other test uses ``sign_in``, which
+sets the ``user`` cookie the form would set.
 """
 
 from __future__ import annotations

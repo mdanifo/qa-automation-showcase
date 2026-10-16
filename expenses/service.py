@@ -1,6 +1,5 @@
 """Claim operations shared by the JSON API and the HTML pages.
 
-Both front ends call these functions, so a rule holds the same way in both.
 Every state change writes its ``claim_events`` row in the same transaction.
 """
 
@@ -66,8 +65,8 @@ def _check_id(claim_id: int) -> None:
 def _lock_claim(conn: db.Connection, claim_id: int) -> Claim:
     """Read the claim and hold its row lock until the transaction ends.
 
-    Two requests deciding or paying the same claim queue here, so the second
-    one sees the first one's result and gets 409 instead of acting twice.
+    A second request for the same claim waits here and then sees the new
+    status, which gets it a 409 rather than a second decision or payment.
     """
     _check_id(claim_id)
     row = conn.execute("SELECT * FROM claims WHERE id = %s FOR UPDATE", (claim_id,)).fetchone()
@@ -112,10 +111,8 @@ def get_claim(actor: User, claim_id: int) -> Claim:
 def list_claims(actor: User, status: str | None = None) -> list[Claim]:
     """The claims ``actor`` may see in a list, ordered by id, optionally of one status.
 
-    The filter runs in Python on purpose: ``rules.visible_in_list`` is the one
-    statement of who sees what, it is unit tested row by row, and this list
-    uses it as written. A SQL copy of the same rule could drift from it.
-    Row counts here are small; a large table would push the filter into SQL.
+    Filtered in Python with ``rules.visible_in_list`` rather than in SQL, to
+    keep one copy of the rule. The table is small enough for that.
     """
     with db.connect() as conn:
         rows = conn.execute("SELECT * FROM claims ORDER BY id").fetchall()

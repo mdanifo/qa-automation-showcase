@@ -1,7 +1,8 @@
 """Sign-in: who the caller is, and what happens without a known user.
 
 Sign-in is an X-User header or the ``user`` cookie the login page sets. Any
-endpoint called without one, or with a name that is not a user, is a 401.
+endpoint called without one, or with a name that is not a user, is a 401, and
+the login form sets no cookie for a name that is not a user.
 """
 
 from __future__ import annotations
@@ -65,3 +66,11 @@ def test_a_cookie_naming_an_unknown_user_is_refused(api_as):
     api.client.cookies.set("user", "nobody-by-this-name")
 
     assert error_of(api.me()) == (401, "unauthenticated")
+
+
+@pytest.mark.catches("login-trusts-the-form")
+def test_the_sign_in_form_refuses_a_name_that_is_not_a_user(api_as):
+    resp = api_as(None).post("/login", data={"user": "nobody-by-this-name"})
+
+    assert (resp.status_code, resp.headers.get("set-cookie")) == (400, None)
+    assert "Pick a user from the list." in resp.text

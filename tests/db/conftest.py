@@ -1,8 +1,7 @@
 """Fixtures for the database layer.
 
-These tests act through the API and then read what Postgres actually holds.
-A reply can say "approved" while the row says otherwise; only SQL can tell.
-Claims in a starting state come from ``claim_in`` in tests/conftest.py.
+These tests act through the API and then read what Postgres holds. Claims in
+a starting state come from ``claim_in`` in tests/conftest.py.
 """
 
 from __future__ import annotations

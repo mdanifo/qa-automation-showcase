@@ -1,12 +1,9 @@
 """The seeded-bug catalog.
 
-Each entry is a realistic mistake that ships behind one marked branch, written
-as ``if bugs.active("<name>"):`` at the exact spot a developer would make it.
-Set ``SEEDED_BUG=<name>`` to turn one on; leave it unset (or empty) for the
-correct app. The suite runs once per bug to prove each one gets caught.
-
-An unknown value is an error, never a silent "no bug": a typo in a bug name
-must not let a run report a catch that never happened.
+Each entry is a mistake behind one ``if bugs.active("<name>"):`` branch in the
+app. ``SEEDED_BUG=<name>`` turns it on; unset or empty is the correct app. An
+unknown value is an error rather than "no bug", so a typo in a bug name cannot
+look like a clean run.
 """
 
 from __future__ import annotations
@@ -28,6 +25,12 @@ CATALOG: dict[str, str] = {
     "pending-total-includes-rejected": "The pending total counts rejected claims.",
     "unescaped-title": "The dashboard renders claim titles as raw HTML.",
     "csv-amount-format": "The CSV export writes 42.5 instead of 42.50.",
+    "control-chars-accepted": (
+        "A title or reason with a NUL byte is accepted; Postgres then fails the request with a 500."
+    ),
+    "page-ignores-refusal": "A refused Approve, Reject or Pay from the pages reports success.",
+    "login-trusts-the-form": "The sign-in form sets the cookie for any posted name, user or not.",
+    "demo-seed-repeats": "The demo seed adds its sample claims again on every run.",
 }
 
 

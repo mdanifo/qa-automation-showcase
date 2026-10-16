@@ -1,11 +1,10 @@
 """Claim titles show as text, never as markup, on every page that shows one.
 
-A title is typed once and then shown to other people: to its owner on My
-claims, to a manager on Approvals, to finance on Payments. Markup in it must
-reach each of them as the characters typed, or it becomes stored cross-site
-scripting. The seeded bug unescaped-title breaks My claims only, so only
-those rows are marked for it; Approvals and Payments are where one person's
-title reaches someone else, and they are checked just the same.
+A title is typed once and shown to other people: to its owner on My claims,
+to a manager on Approvals, to finance on Payments. Markup in it must reach
+each of them as the characters typed, or it is stored cross-site scripting.
+The seeded bug unescaped-title breaks My claims only, so only those rows are
+marked for it; Approvals and Payments are checked the same way.
 """
 
 from __future__ import annotations

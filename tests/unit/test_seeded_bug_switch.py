@@ -1,4 +1,4 @@
-"""The SEEDED_BUG switch itself. A typo must stop the run, never pass for a clean build."""
+"""The SEEDED_BUG switch: on, off, and a typo that must stop the run."""
 
 from __future__ import annotations
 

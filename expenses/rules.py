@@ -1,7 +1,6 @@
-"""Pure business rules: parsing, limits, mileage, dates, transitions and visibility.
+"""Business rules: parsing, limits, mileage, dates, transitions and visibility.
 
-Nothing here touches the database or HTTP, so every rule can be unit tested
-directly. Money is Decimal or integer cents, never float.
+No database or HTTP here. Money is Decimal on the way in and integer cents after.
 """
 
 from __future__ import annotations
@@ -37,6 +36,8 @@ CENT = Decimal("0.01")
 _AMOUNT = re.compile(r"[0-9]+(\.[0-9]{1,2})?")
 _MILES = re.compile(r"[0-9]+(\.[0-9])?")
 _ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+_CONTROL = re.compile(r"[\x00-\x1f\x7f]")
+_CONTROL_IN_NOTE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")  # a reason may hold \t \n \r
 
 
 class ClaimError(Exception):
@@ -173,8 +174,18 @@ def parse_expense_date(text: object, today: date | None = None) -> date:
     return value
 
 
+def _refuse_control_characters(text: str, pattern: re.Pattern[str], field: str) -> None:
+    """Refuse control characters. Postgres cannot store a NUL, and nobody types the rest."""
+    found = pattern.search(text) is not None
+    if bugs.active("control-chars-accepted"):
+        # SEEDED BUG control-chars-accepted: unchecked, a NUL reaches Postgres and the request 500s.
+        found = False
+    if found:
+        raise ValidationError(f"The {field} cannot contain control characters.")
+
+
 def clean_title(text: object) -> str:
-    """Strip a title and require 1 to 80 characters."""
+    """Strip a title and require 1 to 80 characters, none of them control characters."""
     if not isinstance(text, str):
         raise ValidationError("A title is required.")
     title = text.strip()
@@ -182,11 +193,12 @@ def clean_title(text: object) -> str:
         raise ValidationError("A title is required.")
     if len(title) > TITLE_MAX:
         raise ValidationError(f"The title can be at most {TITLE_MAX} characters.")
+    _refuse_control_characters(title, _CONTROL, "title")
     return title
 
 
 def clean_note(text: object) -> str:
-    """Strip a rejection note and require it to be non-blank and at most 500 characters."""
+    """Strip a rejection note and require 1 to 500 characters. Line breaks and tabs may stay."""
     if text is None:
         text = ""
     if not isinstance(text, str):
@@ -199,6 +211,7 @@ def clean_note(text: object) -> str:
         raise ValidationError("A rejection needs a reason.")
     if len(note) > NOTE_MAX:
         raise ValidationError(f"The reason can be at most {NOTE_MAX} characters.")
+    _refuse_control_characters(note, _CONTROL_IN_NOTE, "reason")
     return note
 
 

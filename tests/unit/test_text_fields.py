@@ -1,4 +1,7 @@
-"""Titles (1 to 80 characters) and rejection reasons (1 to 500), both measured after stripping."""
+"""Titles (1 to 80 characters) and rejection reasons (1 to 500), both measured after stripping.
+
+Neither may hold control characters, apart from line breaks and tabs in a reason.
+"""
 
 from __future__ import annotations
 
@@ -72,3 +75,37 @@ def test_a_blank_or_missing_reason_is_refused(value):
 def test_a_reason_that_is_not_text_is_refused():
     with pytest.raises(rules.ValidationError, match="must be text"):
         rules.clean_note(["Receipt is missing."])
+
+
+CONTROL_CHARACTERS = [
+    pytest.param("\x00", id="nul"),
+    pytest.param("\x07", id="bell"),
+    pytest.param("\x1b", id="escape"),
+    pytest.param("\x7f", id="delete"),
+]
+
+
+@pytest.mark.catches("control-chars-accepted")
+@pytest.mark.parametrize("char", [*CONTROL_CHARACTERS, pytest.param("\n", id="line-break")])
+def test_a_title_with_a_control_character_is_refused(char):
+    with pytest.raises(rules.ValidationError, match="title cannot contain control characters"):
+        rules.clean_title(f"Team{char}lunch")
+
+
+@pytest.mark.catches("control-chars-accepted")
+@pytest.mark.parametrize("char", CONTROL_CHARACTERS)
+def test_a_reason_with_a_control_character_is_refused(char):
+    with pytest.raises(rules.ValidationError, match="reason cannot contain control characters"):
+        rules.clean_note(f"No{char}receipt.")
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        pytest.param("Receipt is for two people.\nOnly one was on the trip.", id="line-break"),
+        pytest.param("Receipt is for two people.\r\nOnly one was on the trip.", id="crlf"),
+        pytest.param("Item\tAmount", id="tab"),
+    ],
+)
+def test_a_reason_keeps_its_line_breaks_and_tabs(text):
+    assert rules.clean_note(text) == text

@@ -35,8 +35,7 @@ def test_a_missing_claim_is_404_for_every_role_and_action(
 def test_an_employee_acting_on_someone_elses_claim_gets_403_not_404(
     action, request_body, db, api_as, make_user
 ):
-    """Role is checked before visibility, so the answer is the same whether or not
-    the employee could open the claim. (The id's existence shows; see test_visibility.py.)"""
+    """Role is checked before visibility, so an employee gets 403 for any claim that exists."""
     claim = insert_claim(db, make_user("employee"), "approved")
     api = api_as(make_user("employee"))
 
